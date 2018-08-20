@@ -128,7 +128,8 @@ public class TwitchEmotesPlugin extends Plugin {
         {
             EMOTES_IMG_TAGS[i] = "<img=" + Integer.toString(curPosition) + ">";
 
-            BufferedImage IMG= ImageIO.read(new File("C:\\Users\\Chris\\Desktop\\runelite-master\\runelite-client\\src\\main\\java\\net\\runelite\\client\\plugins\\twitchemotes\\resources\\" + EMOTES_FILES[i]));
+            File file = new File("runelite-client\\src\\main\\java\\net\\runelite\\client\\plugins\\twitchemotes\\resources\\" + EMOTES_FILES[i]);
+            BufferedImage IMG = ImageIO.read(file.getAbsoluteFile());
             EMOTES_IMG[i] = rgbaToIndexedBufferedImage(IMG);
             newModIcons[curPosition] = createIndexedSprite(client, EMOTES_IMG[i]);
         }
