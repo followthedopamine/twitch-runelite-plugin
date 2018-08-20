@@ -1,22 +1,22 @@
 package net.runelite.client.plugins.twitchemotes;
 
 import com.google.common.eventbus.Subscribe;
-import java.awt.Dimension;
-import java.awt.image.*;
-import java.util.Arrays;
+
+import javax.imageio.ImageIO;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.IndexedSprite;
 import net.runelite.api.events.GameStateChanged;
-import javax.imageio.ImageIO;
 import net.runelite.api.events.SetMessage;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import org.apache.commons.lang3.StringUtils;
 
+import java.awt.image.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 @PluginDescriptor(
         name = "Twitch Emotes",
@@ -27,8 +27,7 @@ public class TwitchEmotesPlugin extends Plugin {
     @Inject
     private Client client;
 
-    private int modIconsLength;
-    private static final String[] TWITCH_IMAGES =
+    private static final String[] EMOTES_FILES =
             {
                     "feelsbadman.png",
                     "hahaa.png",
@@ -36,25 +35,37 @@ public class TwitchEmotesPlugin extends Plugin {
                     "monkas.png",
                     "omegalul.png",
                     "pogchamp.png",
-                    "trihard.png"
+                    "trihard.png",
+                    "cmonbruh.png",
+                    "lul.png",
+                    "aismug.png",
+                    "gachigasm.png",
+                    "jebaited.png",
+                    "poggers.png",
+                    "biblethump.png"
             };
 
-    private final String[] emoteList = {":feelsbadman:", ":hahaa:", ":kappa:", ":monkas:", ":omegalul:", ":pogchamp:", ":trihard:"};
-    private final String[] imgList = {"<img=29>", "<img=30>", "<img=31>", "<img=32>", "<img=33>", "<img=34>", "<img=35>"};
+    private final String[] EMOTES_LIST =
+            {
+                    ":feelsbadman:",
+                    ":hahaa:",
+                    ":kappa:",
+                    ":monkas:",
+                    ":omegalul:",
+                    ":pogchamp:",
+                    ":trihard:",
+                    ":cmonbruh:",
+                    ":lul:",
+                    ":aismug:",
+                    ":gachigasm:",
+                    ":jebaited:",
+                    ":poggers:",
+                    ":bibelthump:"
+            };
 
-    private static final Dimension TWITCH_IMAGE_DIMENSION = new Dimension(15, 15);
-    private final BufferedImage[] twitchChatImages = new BufferedImage[TWITCH_IMAGES.length];
-
-    @Subscribe
-    public void onSetMessage(SetMessage setMessage) {
-        if (client.getGameState() != GameState.LOADING && client.getGameState() != GameState.LOGGED_IN) {
-            return;
-        }
-
-        if (containsEmote(setMessage.getValue())) {
-            insertIcon(setMessage);
-        }
-    }
+    private final String[] EMOTES_IMG_TAGS = new String [EMOTES_FILES.length];
+    private final BufferedImage[] EMOTES_IMG = new BufferedImage[EMOTES_FILES.length];
+    private int modIconsLength;
 
     @Subscribe
     public void onGameStateChanged(GameStateChanged gameStateChanged) throws IOException
@@ -62,38 +73,69 @@ public class TwitchEmotesPlugin extends Plugin {
         if (gameStateChanged.getGameState() == GameState.LOGGED_IN
                 && modIconsLength == 0)
         {
-            System.out.println("Loading chat icons ...");
-            loadClanChatIcons();
+            System.out.println("Loading twitch emotes ...");
+            loadTwitchEmotes();
+        }
+    }
+
+    @Subscribe
+    public void onSetMessage(SetMessage setMessage) {
+        if (client.getGameState() != GameState.LOADING && client.getGameState() != GameState.LOGGED_IN) {
+            return;
+        }
+
+        switch (setMessage.getType())
+        {
+            case PUBLIC:
+            case PUBLIC_MOD:
+            case CLANCHAT:
+            case PRIVATE_MESSAGE_RECEIVED:
+            case PRIVATE_MESSAGE_SENT:
+                break;
+            default:
+                return;
+        }
+
+        if (containsEmote(setMessage.getValue())) {
+            insertIcon(setMessage);
         }
     }
 
     private void insertIcon(final SetMessage message) {
         String newMessage = message.getValue();
 
-        newMessage = StringUtils.replaceEach(newMessage, emoteList, imgList);
+        newMessage = StringUtils.replaceEach(newMessage, EMOTES_LIST, EMOTES_IMG_TAGS);
         message.getMessageNode().setValue(newMessage);
         client.refreshChat();
     }
 
-    private void loadClanChatIcons() throws IOException
+    private boolean containsEmote(final String message) {
+        for (String word : EMOTES_LIST) {
+            if (message.contains(word)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void loadTwitchEmotes() throws IOException
     {
         final IndexedSprite[] modIcons = client.getModIcons();
-        final IndexedSprite[] newModIcons = Arrays.copyOf(modIcons, modIcons.length + TWITCH_IMAGES.length);
-        int curPosition = newModIcons.length - TWITCH_IMAGES.length;
+        final IndexedSprite[] newModIcons = Arrays.copyOf(modIcons, modIcons.length + EMOTES_FILES.length);
+        int curPosition = newModIcons.length - EMOTES_FILES.length;
 
-        for (int i = 0; i < TWITCH_IMAGES.length; i++, curPosition++)
+        for (int i = 0; i < EMOTES_FILES.length; i++, curPosition++)
         {
-            final String resource = TWITCH_IMAGES[i];
+            EMOTES_IMG_TAGS[i] = "<img=" + Integer.toString(curPosition) + ">";
 
-            BufferedImage twitch_emoticon = ImageIO.read(new File("C:\\Users\\Chris\\Desktop\\runelite-master\\runelite-client\\src\\main\\java\\net\\runelite\\client\\plugins\\twitchemotes\\resources\\" + resource));
-
-            twitchChatImages[i] = rgbaToIndexedBufferedImage(twitch_emoticon);
-            newModIcons[curPosition] = createIndexedSprite(client, twitchChatImages[i]);
+            BufferedImage IMG= ImageIO.read(new File("C:\\Users\\Chris\\Desktop\\runelite-master\\runelite-client\\src\\main\\java\\net\\runelite\\client\\plugins\\twitchemotes\\resources\\" + EMOTES_FILES[i]));
+            EMOTES_IMG[i] = rgbaToIndexedBufferedImage(IMG);
+            newModIcons[curPosition] = createIndexedSprite(client, EMOTES_IMG[i]);
         }
 
         client.setModIcons(newModIcons);
         modIconsLength = newModIcons.length;
-        System.out.println(" - " + modIconsLength + " icons loaded");
+        System.out.println(" - " + (modIconsLength - modIcons.length)  + " icons loaded");
     }
 
     private static BufferedImage rgbaToIndexedBufferedImage(final BufferedImage sourceBufferedImage)
@@ -142,14 +184,5 @@ public class TwitchEmotesPlugin extends Plugin {
         newIndexedSprite.setOffsetX(0);
         newIndexedSprite.setOffsetY(0);
         return newIndexedSprite;
-    }
-
-    private boolean containsEmote(final String message) {
-        for (String word : emoteList) {
-            if (message.contains(word)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

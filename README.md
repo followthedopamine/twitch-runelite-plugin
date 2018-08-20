@@ -5,11 +5,18 @@ RuneLite Plugin that enables twitch emotes in OSRS chat.
 ### Currently supported emotes:
 * :feelsbadman:
 * :hahaa:
-* :kapaa:
+* :kappa:
 * :monkas:
 * :omegalul:
 * :pogchamp:
 * :trihard:
+* :cmonbruh:
+* :lul:
+* :aismug:
+* :gachigasm:
+* :biblethump:
+* :poggers:
+* :jebaited:
 
 
 ## Requirements:
