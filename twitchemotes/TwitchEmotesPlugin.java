@@ -139,30 +139,20 @@ public class TwitchEmotesPlugin extends Plugin {
         System.out.println(" - " + (modIconsLength - modIcons.length)  + " icons loaded");
     }
 
-    private static BufferedImage rgbaToIndexedBufferedImage(final BufferedImage sourceBufferedImage)
+    private static BufferedImage rgbaToIndexedBufferedImage(final BufferedImage src)
     {
         final BufferedImage indexedImage = new BufferedImage(
-                sourceBufferedImage.getWidth(),
-                sourceBufferedImage.getHeight(),
+                src.getWidth(),
+                src.getHeight(),
                 BufferedImage.TYPE_BYTE_INDEXED);
 
-        final ColorModel cm = indexedImage.getColorModel();
-        final IndexColorModel icm = (IndexColorModel) cm;
-
-        final int size = icm.getMapSize();
-        final byte[] reds = new byte[size];
-        final byte[] greens = new byte[size];
-        final byte[] blues = new byte[size];
-        icm.getReds(reds);
-        icm.getGreens(greens);
-        icm.getBlues(blues);
-
-        final WritableRaster raster = indexedImage.getRaster();
-        final int pixel = raster.getSample(0, 0, 0);
-        final IndexColorModel resultIcm = new IndexColorModel(8, size, reds, greens, blues, pixel);
-        final BufferedImage resultIndexedImage = new BufferedImage(resultIcm, raster, sourceBufferedImage.isAlphaPremultiplied(), null);
-        resultIndexedImage.getGraphics().drawImage(sourceBufferedImage, 0, 0, null);
-        return resultIndexedImage;
+        for (int x = 0; x < src.getWidth(); x++) {
+            for (int y = 0; y < src.getHeight(); y++) {
+                indexedImage.setRGB(x, y, src.getRGB(x, y));
+            }
+        }
+        
+        return indexedImage;
     }
 
     private static IndexedSprite createIndexedSprite(final Client client, final BufferedImage bufferedImage)
