@@ -4,11 +4,13 @@ import com.google.common.eventbus.Subscribe;
 
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
+
+import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.IndexedSprite;
 import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.SetMessage;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import org.apache.commons.lang3.StringUtils;
@@ -23,6 +25,7 @@ import java.util.Arrays;
         description = "Enables twitch emotes in chat.",
         tags = {"twitch", "emotes", "chat"}
 )
+@Slf4j
 public class TwitchEmotesPlugin extends Plugin {
     @Inject
     private Client client;
@@ -79,30 +82,31 @@ public class TwitchEmotesPlugin extends Plugin {
     }
 
     @Subscribe
-    public void onSetMessage(SetMessage setMessage) {
+    public void onChatMessage(ChatMessage setMessage) {
         if (client.getGameState() != GameState.LOADING && client.getGameState() != GameState.LOGGED_IN) {
             return;
         }
-
+        log.debug("Any chat message detected");
         switch (setMessage.getType())
         {
-            case PUBLIC:
-            case PUBLIC_MOD:
-            case CLANCHAT:
-            case PRIVATE_MESSAGE_RECEIVED:
-            case PRIVATE_MESSAGE_SENT:
+            case PUBLICCHAT:
+            case MODCHAT:
+            case CLAN_CHAT:
+            case PRIVATECHAT:
+            case PRIVATECHATOUT:
                 break;
             default:
                 return;
         }
-
-        if (containsEmote(setMessage.getValue())) {
+        log.debug("Valid chat message detected");
+        if (containsEmote(setMessage.getMessage())) {
+            log.debug("Emote found");
             insertIcon(setMessage);
         }
     }
 
-    private void insertIcon(final SetMessage message) {
-        String newMessage = message.getValue();
+    private void insertIcon(final ChatMessage message) {
+        String newMessage = message.getMessage();
 
         newMessage = StringUtils.replaceEach(newMessage, EMOTES_LIST, EMOTES_IMG_TAGS);
         message.getMessageNode().setValue(newMessage);
